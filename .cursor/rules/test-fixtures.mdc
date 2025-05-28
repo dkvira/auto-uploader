@@ -1,0 +1,81 @@
+---
+description: 
+globs: usso/app/tests/**
+alwaysApply: false
+---
+# Async Test Fixtures and Utilities
+
+## Common Async Fixtures
+
+The test suite uses several common async fixtures defined in `conftest.py`:
+
+### Async Client Fixture
+```python
+import pytest_asyncio
+from httpx import AsyncClient
+
+@pytest_asyncio.fixture
+async def async_client():
+    """Async test client fixture for making API requests"""
+    app = create_test_app()
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+```
+
+### Async Database Fixture
+```python
+@pytest_asyncio.fixture
+async def test_db():
+    """Async test database fixture with isolated test database"""
+    db = await create_test_db()
+    yield db
+    await cleanup_test_db(db)
+```
+
+## Async Test Utilities
+
+### Async Mock Data Generators
+- `async generate_test_user()` - Creates test user data
+- `async generate_test_item()` - Creates test item data
+- `async generate_test_token()` - Creates authentication tokens
+
+### Async Helper Functions
+- `async assert_response_structure()` - Validates response format
+- `async create_test_headers()` - Generates test request headers
+- `async mock_external_service()` - Mocks external service calls
+
+## Async Environment Setup
+
+Test environment configuration:
+- Use `pytest.ini` for pytest-asyncio configuration
+- Environment variables in `.env.test`
+- Async test database configuration in `config/test.py`
+
+## Async Mocking Patterns
+
+Use the following patterns for async mocking:
+```python
+@pytest_asyncio.fixture
+async def mock_external_api(monkeypatch):
+    async def mock_response(*args, **kwargs):
+        return MockResponse(status_code=200, json_data={})
+    monkeypatch.setattr("aiohttp.ClientSession.get", mock_response)
+    return mock_response
+
+@pytest_asyncio.fixture
+async def mock_redis(monkeypatch):
+    async def mock_get(key):
+        return "mocked_value"
+    monkeypatch.setattr("redis.Redis.get", mock_get)
+    return mock_get
+```
+
+## Async Context Managers
+
+Example of async context manager usage:
+```python
+@pytest_asyncio.fixture
+async def test_context():
+    async with AsyncTestContext() as ctx:
+        yield ctx
+```

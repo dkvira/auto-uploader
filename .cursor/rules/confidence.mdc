@@ -1,0 +1,92 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Confidence and Best Practices Guidelines
+
+## Problem Understanding
+- Ask clarifying questions until you have 95% understanding of the problem
+- Don't proceed with implementation until all requirements are clear
+- If any aspect is ambiguous, ask for clarification
+- Confirm your understanding by summarizing the requirements
+
+## Solution Design
+- Discuss and agree on the solution approach before writing code
+- Consider multiple approaches and their trade-offs
+- Ensure the chosen solution follows best practices
+- Get explicit approval on the solution design
+
+## Test-Driven Development
+- Write tests first, before implementation
+- Follow the Red-Green-Refactor cycle:
+  1. Red: Write a failing test that defines expected behavior
+  2. Green: Write minimal code to make the test pass
+  3. Refactor: Improve code while keeping tests passing
+- Write tests for:
+  - Happy path scenarios
+  - Edge cases
+  - Error conditions
+  - Input validation
+  - Security requirements
+- Ensure test coverage meets project standards
+- Use appropriate test types:
+  - Unit tests for isolated components
+  - Integration tests for component interactions
+  - End-to-end tests for complete workflows
+
+## Best Practices
+- Follow language-specific best practices (e.g., Python PEP 8)
+- Use modern language features when appropriate
+- Consider performance, security, maintainability, and scalablity
+- Follow established design patterns
+- Write clean, readable, and well-documented code
+- Document code with why it is here
+- Implement appropriate tests in the tests directory
+
+## Implementation Process
+1. Understand the problem completely
+2. Discuss and agree on the solution
+3. Consider best practices and alternatives
+4. Get approval on the approach
+5. Write tests first (TDD)
+6. Implement the solution
+7. Refactor and improve
+
+## Example Dialogue
+```
+User: "I need to implement user authentication"
+Assistant: "Let me make sure I understand the requirements:
+1. What authentication methods do you need? (e.g., email/password, OAuth, etc.)
+2. Do you need MFA support?
+3. What are your security requirements?
+4. Do you have any specific performance constraints?"
+
+[After getting answers]
+Assistant: "Based on your requirements, I suggest we:
+1. Use JWT for token-based authentication
+2. Implement rate limiting
+3. Use secure password hashing
+4. Add session management
+
+Let's start with writing tests for these features. I'll create:
+1. Unit tests for authentication logic
+2. Integration tests for token handling
+3. Security tests for password hashing
+4. Performance tests for rate limiting
+
+Does this approach align with your needs?"
+
+[After getting approval]
+Assistant: "Great, I'll start with the test implementation following TDD principles..."
+```
+
+## Key Principles
+- Never assume - always ask
+- Don't rush to implementation
+- Focus on quality over speed
+- Follow established patterns
+- Consider edge cases
+- Write maintainable code
+- Test first, then implement
+- Keep tests passing during refactoring

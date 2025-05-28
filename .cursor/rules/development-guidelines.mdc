@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Guidelines
+
+## Project Structure
+- Keep application-specific code in the [app/apps/](mdc:app/apps) directory
+- Server configuration and setup should be in the [app/server/](mdc:app/server) directory
+- Logs should be written to the [app/logs/](mdc:app/logs) directory
+
+## Code Organization
+- Use FastAPI's dependency injection system for managing dependencies
+- Follow FastAPI's best practices for route organization
+- Keep configuration in [app/server/config.py](mdc:app/server/config.py)
+- Use type hints consistently throughout the codebase
+
+## Docker Development
+- Use [docker-compose.yml](mdc:docker-compose.yml) for local development
+- The [app/Dockerfile](mdc:app/Dockerfile) is configured for production builds
+- Make sure to update [app/requirements.txt](mdc:app/requirements.txt) when adding new dependencies
+
+## Logging
+- Application logs are stored in the logs directory
+- Log files are excluded from hot reload to prevent unnecessary restarts
+- Use Python's built-in logging module for consistent logging across the application

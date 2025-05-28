@@ -1,0 +1,33 @@
+---
+description: 
+globs: usso/app/**
+alwaysApply: false
+---
+
+## 🗂️ Project Overview
+This repository implements **USSO** — a multi-tenant authentication and identity platform designed for SaaS and microservice environments. The source code is structured by responsibility domain, and each domain is governed by its own rule file.
+
+This `project.mdc` acts as the entry point for all Cursor-compatible rules in the codebase.
+
+## 📁 Rule Scope
+- `apps/identity/**` — see `Identity Layer Guidelines`
+- `apps/access_control/**` — see `Access Control Layer Guidelines`
+- `apps/integration/oauth/**` — see `Integration Layer Guidelines`
+- `apps/tenant/**` — see `Tenant Layer Guidelines`
+- `apps/auth/**` — see `Auth Module Guidelines`
+- `apps/shared/**` — see `Shared Utilities Guidelines`
+
+## ✅ Conventions
+- Every module must include:
+  - `models.py`
+  - `schemas.py`
+  - `routes.py`
+  - `services.py`
+  - `__init__.py`
+- Code must respect strict domain boundaries; cross-layer coupling is discouraged.
+- Token issuance and session handling must be centralized under `identity.token`.
+
+## 🚧 Development Notes
+- When introducing new domains, always create a corresponding `.mdc` rule file.
+- Use typed resource prefixes (e.g., `user:`, `ws_`, `org_`) for clarity and validation.
+- The project prioritizes fast startup, isolated tests, and secure-by-default configuration.

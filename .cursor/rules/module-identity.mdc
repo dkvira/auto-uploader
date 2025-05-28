@@ -1,0 +1,46 @@
+---
+description: Guidelines for the Identity Layer modules
+globs: usso/app/apps/identity/*.py
+alwaysApply: false
+---
+
+## 🔍 Purpose
+This rule defines structural and organizational standards for all modules that manage identity-related entities within the `apps/identity/` directory.
+
+## 📁 Folder Structure
+- Place each identity-related concern in its own dedicated submodule.
+- Required submodules:
+  - `user/` – Human user accounts and identity metadata.
+  - `agent/` – Service accounts or non-human actors.
+  - `session/` – Session tracking per user or device.
+  - `token/` – Issuance and validation of all token types (JWT, refresh, secure tokens).
+  - `referral/` – Invite/referral code logic.
+  - `api_key/` – Scoped programmatic access tokens.
+
+## 📦 Module Conventions
+Each submodule must contain:
+- `models.py` — Beanie or ODM models, no external logic.
+- `schemas.py` — Pydantic schemas for input/output.
+- `routes.py` — FastAPI routes registered via APIRouter.
+- `services.py` — Business logic and service functions.
+- `__init__.py` — Required for module recognition.
+
+## 🧭 Design Principles
+- Use single-responsibility modules: each submodule should encapsulate one concern.
+- Avoid circular imports by decoupling route logic from database layers.
+- Shared logic (validation, enums, constants) should be placed in a common utility module (e.g., `identity/shared/`).
+
+## ✅ Best Practices
+- Name all models with clear suffixes: `User`, `UserSession`, `UserToken`, etc.
+- Keep route files thin. Move business logic to `services.py`.
+- Use prefixes in identifiers (`user:`, `service:`, etc.) to maintain clarity.
+- Avoid coupling identity logic with tenant or workspace ownership logic.
+
+## 🧪 Testing Expectations
+- Each submodule should have a corresponding `tests/identity/{module}/` directory with unit and integration tests.
+- Use dependency overrides in FastAPI to isolate services for testing.
+
+## 🔐 Security Considerations
+- All token creation functions must support setting `jti`, `exp`, and `aud` explicitly.
+- API key issuance logic must persist only hashed secrets.
+- Do not include PII (e.g., emails) in token payloads unless hashed or obfuscated.

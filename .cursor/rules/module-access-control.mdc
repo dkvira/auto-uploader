@@ -1,0 +1,37 @@
+---
+description: 
+globs: usso/app/apps/access_control/*.py
+alwaysApply: false
+---
+
+## 🔍 Purpose
+Defines conventions for managing roles, permissions, and workspace scoping in the `apps/access_control/` layer.
+
+## 📁 Folder Structure
+- `role/` — Handles role definitions, hierarchies, and role-to-user bindings.
+- `workspace/` — Manages per-tenant workspaces with isolated access policies.
+
+## 📦 Module Conventions
+Each submodule must contain:
+- `models.py` — Permission-related document models.
+- `schemas.py` — Pydantic request/response schemas.
+- `routes.py` — FastAPI routers for admin/config APIs.
+- `services.py` — Business logic for role resolution and workspace queries.
+
+## 🧭 Design Principles
+- Permissions must be encoded in role bindings and validated at route level.
+- Token payloads must only include roles and resolved scopes (no workspace logic embedded).
+- Workspace isolation must be enforced using `workspace_id` extracted from token claims.
+
+## ✅ Best Practices
+- Role names should be globally unique within a tenant.
+- Use consistent prefixes for workspace-scoped objects (`ws_`, `role:`).
+- Validate workspace membership and role access before granting scope.
+
+## 🧪 Testing Expectations
+- Simulate role-based access via mocked tokens.
+- Write unit tests for workspace switching and access enforcement edge cases.
+
+## 🔐 Security Considerations
+- Prevent privilege escalation by restricting who can create/edit roles.
+- Do not hardcode any role/permission logic; make all behavior policy-driven.

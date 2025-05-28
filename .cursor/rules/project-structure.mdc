@@ -1,0 +1,34 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Structure Guide
+
+This is a FastAPI-based web application with the following structure:
+
+- [app/main.py](mdc:app/main.py) - The main entry point that runs the FastAPI application using uvicorn
+- [app/server/server.py](mdc:app/server/server.py) - Contains the FastAPI application instance and core server setup
+- [app/server/config.py](mdc:app/server/config.py) - Configuration settings for the application
+- [app/apps/](mdc:app/apps) - Directory containing application-specific modules and features
+- [app/logs/](mdc:app/logs) - Directory for application logs
+- @app/tests/ - Directory for tests
+
+The application is containerized using Docker, with configuration in:
+- [app/Dockerfile](mdc:app/Dockerfile) - Docker configuration for the application
+- [docker-compose.yml](mdc:docker-compose.yml) - Docker Compose configuration for local development
+
+## Module/Application structures
+
+Each application in the @app/apps/<app_name> has similar structures:
+
+- schemas.py: stores all of related schemas, including object models in PydanticV2
+- models.py: The application database models. the main model inherit from the data schmeas and the fastapi_mongo_base.models.BaseEntity that implements the database operations.
+- routes.py: stores the ResourceRouter class that has its own CRUD operations methods and will be used for managing similar resource level endpoints
+- services.py: stores all the business logics.
+- worker.py: (if needed). if the application needs some asyncronous periodic operations, the application will contains worker.py that handle the system background tasks.
+
+## Development Setup
+1. The application runs on port 8000 by default
+2. Hot reload is enabled for development
+3. Logs are stored in the logs directory and excluded from hot reload

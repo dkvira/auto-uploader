@@ -1,0 +1,38 @@
+---
+description: Guidelines for the Tenant Layer modules
+globs: usso/app/apps/tenant/**
+alwaysApply: false
+---
+
+## 🔍 Purpose
+Specifies organizational and functional standards for managing tenants, tenant-level administration, and cryptographic infrastructure in multi-tenant environments.
+
+## 📁 Folder Structure
+- `admin/` — Tenant-scoped admin users and permissions.
+- `key/` — Public/private keypair management for tenant-level JWT signing.
+
+## 📦 Module Conventions
+Each submodule must include:
+- `models.py` — Tenant documents and scoped relationships.
+- `schemas.py` — Pydantic schemas for onboarding, configuration, and key generation.
+- `routes.py` — REST endpoints for managing tenants and key lifecycle.
+- `services.py` — Logic for tenant provisioning, cryptographic setup, and key rotation.
+
+## 🧭 Design Principles
+- Each tenant must have an isolated keychain and metadata.
+- Use deterministic ID patterns (e.g., `org_`, `tenant_`) for lookup consistency.
+- Do not mix tenant admin roles with global system administration.
+
+## ✅ Best Practices
+- Separate tenant identification (`tenant_id`) from `user_id` in all route contexts.
+- Reuse tenant-scoped permissions across service layers.
+- Support both manual and automated tenant creation flows.
+
+## 🧪 Testing Expectations
+- Verify tenant isolation by simulating cross-tenant access attempts.
+- Write integration tests for key provisioning and rotation flows.
+
+## 🔐 Security Considerations
+- Store private keys encrypted, ideally in Vault or a secure HSM.
+- Validate ownership and scope before executing admin-level operations.
+- Audit all key generation and admin assignments.

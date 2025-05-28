@@ -1,0 +1,34 @@
+---
+description: 
+globs: docker-compose.yml
+alwaysApply: false
+---
+# Docker and Traefik Configuration
+
+## Docker Compose Setup
+
+The application uses Docker Compose for orchestration with the following key features:
+
+- Container auto-restart policy: `unless-stopped`
+- Environment variables loaded from `.env` file
+- Connected to two external networks:
+  - `mongo-net`: For MongoDB connectivity
+  - `traefik-net`: For Traefik reverse proxy
+
+## Traefik Configuration
+
+The application is configured with Traefik for routing and SSL:
+
+- Enabled for websecure entrypoint
+- Automatic SSL/TLS termination
+- Host-based routing using the `DOMAIN` environment variable
+- Service name derived from `PROJECT_NAME` environment variable
+- Application exposed on port 8000 internally
+
+## Network Configuration
+
+The application requires two external networks:
+- `mongo-net`: For database connectivity
+- `traefik-net`: For reverse proxy communication
+
+Make sure these networks exist before deploying the application.

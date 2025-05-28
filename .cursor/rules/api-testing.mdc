@@ -1,0 +1,97 @@
+---
+description: 
+globs: usso/app/tests/*.py
+alwaysApply: false
+---
+# Async API Testing Guide
+
+## Test Structure
+
+The API tests are organized in the `tests` directory with the following structure:
+
+- `tests/` - Root test directory
+  - `conftest.py` - Shared async fixtures and configurations
+  - `api/` - API-specific test modules
+    - `test_endpoints.py` - Async endpoint tests
+    - `test_models.py` - Async model tests
+  - `integration/` - Async integration test modules
+  - `unit/` - Async unit test modules
+
+## Async Testing Best Practices
+
+1. **Fixture Usage**
+   - Use `@pytest_asyncio.fixture` for async fixtures
+   - Create test-specific async fixtures in test modules
+   - Use `async def` for fixture definitions
+
+2. **Test Organization**
+   - Group related tests in classes
+   - Use descriptive test names
+   - Follow the pattern: `test_<functionality>_<scenario>`
+   - Mark async tests with `@pytest.mark.asyncio`
+
+3. **Async API Testing Patterns**
+   - Test both successful and error cases
+   - Use `async_client` for async requests
+   - Validate response status codes
+   - Check response data structure
+   - Test authentication/authorization
+   - Verify error messages
+
+## Example Async Test Structure
+
+```python
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+
+@pytest.mark.asyncio
+async def test_create_item_success(async_client, test_data):
+    response = await async_client.post("/api/items/", json=test_data)
+    assert response.status_code == 201
+    assert response.json()["name"] == test_data["name"]
+
+@pytest.mark.asyncio
+async def test_create_item_validation(async_client, invalid_data):
+    response = await async_client.post("/api/items/", json=invalid_data)
+    assert response.status_code == 422
+
+@pytest.mark.asyncio
+class TestItemEndpoints:
+    async def test_get_items(self, async_client):
+        response = await async_client.get("/api/items/")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+```
+
+## Running Async Tests
+
+Run tests using:
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/api/test_endpoints.py
+
+# Run with coverage
+pytest --cov=app tests/
+
+# Run with asyncio debug
+pytest --asyncio-mode=debug tests/
+```
+
+## Test Configuration
+
+Add to `pytest.ini`:
+```ini
+[pytest]
+asyncio_mode = auto
+addopts = --cov=app --cov-report=term-missing --cov-fail-under=80
+markers =
+    asyncio: mark test as async
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+```

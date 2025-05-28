@@ -1,0 +1,56 @@
+---
+description: 
+globs: *schemas.py,*models.py
+alwaysApply: false
+---
+# Pydantic v2 Type Annotation and Validation Rules
+
+## Type Annotation Standards
+
+1. Use built-in type annotations:
+   - Use `list`, `dict`, `set`, `tuple` (not from `typing`)
+2. Use union syntax for optionals:
+   - Use `str | None`, `int | None`, etc.
+3. Use built-in types for collections:
+   - Use `list[str]`, `dict[str, int]`, etc.
+
+## Pydantic v2 Validation and Serialization
+
+- Use `@model_validator` for model-level validation (replaces `@root_validator`).
+- Use `@field_validator` for field-level validation (replaces `@validator`).
+- Use `model_dump()` for serialization (replaces `.dict()` and `.json()`).
+- Use `model_validate()` for parsing/validation (replaces `parse_obj()`).
+- Prefer the new config system for model configuration.
+
+### Examples
+
+```python
+from pydantic import BaseModel, field_validator, model_validator
+
+class User(BaseModel):
+    name: str
+    age: int | None
+
+    @field_validator('name')
+    @classmethod
+    def name_must_not_be_blank(cls, v):
+        if not v.strip():
+            raise ValueError('Name cannot be blank')
+        return v
+
+    @model_validator(mode='after')
+    def check_age_and_name(self):
+        if self.age is not None and self.age < 0:
+            raise ValueError('Age must be non-negative')
+        return self
+
+# Serialization
+user = User(name='Alice', age=30)
+data = user.model_dump()
+```
+
+## Migration Notes
+
+- Do not use `@validator` or `@root_validator` (deprecated in v2).
+- Do not use `.dict()` or `.json()`; use `model_dump()` instead.
+- Use the new union syntax and built-in types for all fields.

@@ -1,0 +1,32 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Server Configuration Guide
+
+The server configuration is managed through several key files:
+
+## Main Server Setup
+- [app/server/server.py](mdc:app/server/server.py) contains the FastAPI application instance and core server setup
+- [app/server/config.py](mdc:app/server/config.py) manages application configuration settings
+
+## Running the Server
+The server can be started in two ways:
+
+1. Direct Python execution:
+```bash
+python -m app.main
+```
+
+2. Using Docker Compose:
+```bash
+docker-compose up
+```
+
+## Configuration Details
+- The server runs on `0.0.0.0:8000` by default
+- Hot reload is enabled for development
+- Access logs are disabled by default
+- Single worker is used for development
+- Log files are excluded from hot reload to prevent unnecessary restarts

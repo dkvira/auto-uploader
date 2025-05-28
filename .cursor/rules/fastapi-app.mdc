@@ -1,0 +1,50 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# FastAPI Application
+
+## Application Structure
+
+The FastAPI application is built with the following components:
+
+- Main entry point: [main.py](mdc:launcpads/book/app/main.py)
+- Application factory: [app_factory.py](mdc:launcpads/book/app/app_factory.py)
+- Hot reload enabled for development
+- Running on port 8000
+
+## Development Features
+
+- Hot reload enabled with WatchFiles
+- Automatic reload on code changes
+- Detailed logging of application lifecycle
+- Graceful shutdown handling
+
+## Application Lifecycle
+
+The application includes proper lifecycle management:
+- Startup sequence with application initialization
+- Shutdown sequence for graceful termination
+- Change detection and logging
+- Process management for development server
+
+## Logging
+
+The application implements structured logging with:
+- Timestamp information
+- Module-level logging
+- Process and server status tracking
+- Change detection logging
+
+## FastAPI rules
+
+- Use type hints for all function parameters and return values
+- Use Pydantic models for request and response validation
+- Use appropriate HTTP methods with path operation decorators (@app.get, @app.post, etc.)
+- Use Router class with appropriate methods for different CRUD operation (list_items, retrieve_items, create_item, update_item, delete_item)
+- Use dependency injection for shared logic like database connections and authentication
+- Use background tasks for non-blocking operations
+- Use proper status codes for responses (201 for creation, 404 for not found, etc.)
+- Use APIRouter for organizing routes by feature or resource
+- Use path parameters, query parameters, and request bodies appropriately

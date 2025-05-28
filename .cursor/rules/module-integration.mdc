@@ -1,0 +1,39 @@
+---
+description: Guidelines for the Integration Layer (OAuth/OIDC)
+globs: usso/app/apps/integration/*.py
+alwaysApply: false
+---
+
+## 🔍 Purpose
+Defines the standards for implementing OAuth 2.0 and OpenID Connect integration as part of the USSO platform.
+
+## 📁 Folder Structure
+- `provider/` — Responsible for issuing tokens, handling login consent, and exposing OIDC endpoints.
+- `client/` — Manages third-party application registration and client metadata.
+- `token/` — Handles authorization code flow, access/refresh token issuance, and token introspection.
+
+## 📦 Module Conventions
+Each submodule must include:
+- `models.py` — Token metadata, client credentials, and flow state representations.
+- `schemas.py` — Input/output validation for OAuth2 requests.
+- `routes.py` — OIDC-compliant endpoints (e.g., `/token`, `/authorize`, `/jwks.json`).
+- `services.py` — Stateless flow logic for validating clients, issuing tokens, and building claims.
+
+## 🧭 Design Principles
+- Use JWT access tokens for first-party and reference tokens for third-party apps.
+- JWKS must be tenant-aware; each tenant exposes its own `/.well-known/jwks.json`.
+- Authorization code and refresh tokens should be revocable and securely stored.
+
+## ✅ Best Practices
+- Enforce client type restrictions (confidential/public) and redirect URI checks.
+- Always hash client secrets before storing.
+- Support PKCE for public clients.
+- Avoid reusing authorization codes.
+
+## 🧪 Testing Expectations
+- Use RFC-compliant client simulations to test all flows.
+- Ensure token replay and misuse is detected and blocked.
+
+## 🔐 Security Considerations
+- Do not expose user-identifying claims (like email) without consent.
+- Implement token throttling and logging for high-risk endpoints (`/token`, `/introspect`).

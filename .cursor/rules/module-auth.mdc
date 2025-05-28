@@ -1,0 +1,34 @@
+---
+description: 
+globs: usso/app/apps/auth/*.py
+alwaysApply: false
+---
+
+## 🔍 Purpose
+Defines conventions for handling authentication entry points including login flows, MFA, QR login, and passkey support.
+
+## 📁 Scope
+This module is responsible for initiating and validating authentication attempts. It does not manage identity or access control logic directly.
+
+## 📦 Module Conventions
+- `models.py` — Temporary login state, MFA challenge metadata.
+- `schemas.py` — Pydantic schemas for login, challenge requests, and verification.
+- `routes.py` — Endpoints like `/login`, `/qr`, `/passkey`, `/request-otp`, etc.
+- `services.py` — Stateless logic for credential validation, OTP, and MFA verification.
+
+## 🔐 Security Boundaries
+- This module should never issue JWTs or manipulate access tokens directly. It must delegate to the `token` service.
+- All flows must support logging, rate limiting, and fraud detection hooks.
+
+## ✅ Best Practices
+- Normalize login inputs (emails, phone numbers) before processing.
+- Separate endpoints by login method for clarity and easier rate control.
+- Design for future-proof extensibility: magic link, biometric, federated ID.
+
+## 🧪 Testing Expectations
+- End-to-end tests for OTP expiry, MFA step-up, and QR-based pairing.
+- Negative testing for wrong credentials, expired tokens, and tampering.
+
+## 🔁 Integration Points
+- Relies on `identity.user`, `identity.session`, and `identity.token`.
+- May use external services for OTP delivery (e.g., SMS, email providers).

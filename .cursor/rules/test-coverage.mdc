@@ -1,0 +1,153 @@
+---
+description: 
+globs: usso/app/tests/**
+alwaysApply: false
+---
+# Test Coverage and Quality Standards
+
+## Coverage Requirements
+
+- Minimum coverage threshold: 80%
+- Critical paths: 100% coverage required
+- API endpoints: 100% coverage required
+- Database operations: 90% coverage required
+
+## Quality Standards
+
+### Test Categories
+1. **Unit Tests**
+   - Test individual functions and methods
+   - Mock external dependencies
+   - Focus on edge cases
+
+2. **Integration Tests**
+   - Test component interactions
+   - Use test database
+   - Test API endpoints
+
+3. **End-to-End Tests**
+   - Test complete user flows
+   - Use production-like environment
+   - Test error scenarios
+
+## Coverage Reports
+
+Generate coverage reports using:
+```bash
+# Generate HTML report
+pytest --cov=app --cov-report=html tests/
+
+# Generate XML report for CI
+pytest --cov=app --cov-report=xml tests/
+```
+
+## Test Quality Checklist
+
+- [ ] Tests are independent
+- [ ] Tests are repeatable
+- [ ] Tests are self-validating
+- [ ] Tests are timely
+- [ ] Tests are readable
+- [ ] Tests are maintainable
+- [ ] Tests cover edge cases
+- [ ] Tests verify error handling
+
+## Continuous Integration
+
+- Run tests on every pull request
+- Enforce coverage thresholds
+- Generate coverage reports
+- Block merges on test failures
+
+# Async Test Coverage and Quality Standards
+
+## Coverage Requirements
+
+- Minimum coverage threshold: 80%
+- Critical paths: 100% coverage required
+- API endpoints: 100% coverage required
+- Database operations: 90% coverage required
+- Async functions: 100% coverage required
+- Event loops: 100% coverage required
+
+## Async Quality Standards
+
+### Test Categories
+1. **Async Unit Tests**
+   - Test individual async functions and methods
+   - Mock external async dependencies
+   - Focus on edge cases
+   - Test event loop handling
+
+2. **Async Integration Tests**
+   - Test async component interactions
+   - Use async test database
+   - Test async API endpoints
+   - Test concurrent operations
+
+3. **Async End-to-End Tests**
+   - Test complete async user flows
+   - Use production-like environment
+   - Test async error scenarios
+   - Test timeout handling
+
+## Async Coverage Reports
+
+Generate coverage reports using:
+```bash
+# Generate HTML report with async coverage
+pytest --cov=app --cov-report=html --asyncio-mode=auto tests/
+
+# Generate XML report for CI
+pytest --cov=app --cov-report=xml --asyncio-mode=auto tests/
+
+# Generate coverage with async event loop info
+pytest --cov=app --cov-report=term-missing --asyncio-mode=debug tests/
+
+# Run with minimum coverage threshold
+pytest --cov=app --cov-report=term-missing --cov-fail-under=80 --asyncio-mode=auto tests/
+```
+
+## Coverage Configuration
+
+Add to `pytest.ini`:
+```ini
+[pytest]
+asyncio_mode = auto
+addopts = --cov=app --cov-report=term-missing --cov-fail-under=80
+markers =
+    asyncio: mark test as async
+```
+
+## Async Test Quality Checklist
+
+- [ ] Tests are independent
+- [ ] Tests are repeatable
+- [ ] Tests are self-validating
+- [ ] Tests are timely
+- [ ] Tests are readable
+- [ ] Tests are maintainable
+- [ ] Tests cover edge cases
+- [ ] Tests verify error handling
+- [ ] Tests handle async timeouts
+- [ ] Tests verify event loop behavior
+- [ ] Tests cover concurrent operations
+- [ ] Tests handle async context managers
+
+## Async Continuous Integration
+
+- Run async tests on every pull request
+- Enforce async coverage thresholds
+- Generate async coverage reports
+- Block merges on async test failures
+- Monitor async test performance
+- Track async test execution time
+
+## Async Test Performance
+
+Monitor and optimize:
+- Event loop overhead
+- Async fixture setup time
+- Concurrent test execution
+- Resource cleanup
+- Memory usage during async tests

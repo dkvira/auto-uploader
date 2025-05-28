@@ -1,0 +1,27 @@
+---
+description: 
+globs: docker-compose.yml
+alwaysApply: false
+---
+# Project Overview
+
+This is a FastAPI application deployed using Docker and Traefik for reverse proxy and SSL termination.
+
+## Key Components
+
+- FastAPI application running on port 8000
+- Docker containerization with Traefik integration
+- MongoDB database connection (via mongo-net network)
+- Automatic SSL/TLS handling through Traefik
+
+## Important Files
+
+- [docker-compose.yml](mdc:launcpads/book/docker-compose.yml) - Main deployment configuration
+- [main.py](mdc:launcpads/book/app/main.py) - FastAPI application entry point
+- [app_factory.py](mdc:launcpads/book/app/app_factory.py) - Application factory setup
+
+## Environment Variables
+
+The application requires the following environment variables:
+- `PROJECT_NAME` - Used for Traefik service naming
+- `DOMAIN` - The domain name for the application

@@ -51,7 +51,8 @@ def create_upload_dicts(images: list[Path], key: str = "") -> list[dict]:
 
         accepted_images[i][dkp_id] = str(image_path)
 
-    with open(config.tmp_dir / f"dicts_{key}.json", "w") as f:
+    (config.tmp_dir / key).mkdir(parents=True, exist_ok=True)
+    with open(config.tmp_dir / key / f"dicts_{key}.json", "w", encoding="utf-8") as f:
         json.dump(accepted_images, f, indent=4, ensure_ascii=False)
 
     return accepted_images
@@ -59,11 +60,12 @@ def create_upload_dicts(images: list[Path], key: str = "") -> list[dict]:
 
 def create_zips(dicts: list[dict], key: str = ""):
     import zipfile
-
     zips = []
-    today = JalaliDate.today().strftime("%Y-%m-%d")
+    basedir = config.tmp_dir / key
     for i, d in enumerate(dicts):
-        # download all images from d.values and save with name of f'{d.keys}.jpg' and zip all of them
+        # download all images from d.values
+        # save with name of f'{d.keys}.jpg'
+        # zip all of them
         for k, v in d.items():
             image = Image.open(v)
 
@@ -78,19 +80,19 @@ def create_zips(dicts: list[dict], key: str = ""):
 
             image_bytes = imagetools.convert_image_bytes(image, "JPEG")
             image_bytes.seek(0)
-            os.makedirs(f"tmp/{i}", exist_ok=True)
-            with open(f"tmp/{i}/{k}.jpg", "wb") as f:
+            (basedir / f"{i}").mkdir(parents=True, exist_ok=True)
+            with open(basedir / f"{i}" / f"{k}.jpg", "wb") as f:
                 f.write(image_bytes.getvalue())
 
         # zip all of them
-        with zipfile.ZipFile(f"tmp/zip_{today}_{i + 1}_{key}.zip", "w") as zipf:
+        with zipfile.ZipFile(basedir / f"zip_{key}_{i + 1}.zip", "w") as zipf:
             for k in d.keys():
-                zipf.write(f"tmp/{i}/{k}.jpg", f"{k}.jpg")
+                zipf.write(basedir / f"{i}" / f"{k}.jpg", f"{k}.jpg")
 
         # delete tmp files
-        shutil.rmtree(f"tmp/{i}")
+        shutil.rmtree(basedir / f"{i}")
 
-        zips.append(f"tmp/zip_{today}_{i + 1}_{key}.zip")
+        zips.append(basedir / f"zip_{key}_{i + 1}.zip")
 
     return zips
 
@@ -156,7 +158,6 @@ def write_excel_pandas(excel: list[dict], file_path: str):
 
 
 def create_excels(dicts: list[dict], key: str = ""):
-    today = JalaliDate.today().strftime("%Y-%m-%d")
     excels = []
     for i, d in enumerate(dicts):
         excel = []
@@ -173,7 +174,7 @@ def create_excels(dicts: list[dict], key: str = ""):
                 }
             )
 
-        file_path = f"tmp/excel_{today}_{i + 1}_{key}.xlsx"
+        file_path = config.tmp_dir / key / f"excel_{key}_{i + 1}.xlsx"
 
         write_excel = write_excel_xlsxwriter
         write_excel(excel, file_path)
@@ -183,10 +184,38 @@ def create_excels(dicts: list[dict], key: str = ""):
 
 
 def create_upload_files(images: list[Path]):
-    key = "".join(random.choices(string.ascii_letters + string.digits, k=6))
+    key = (
+        JalaliDate.today().strftime("%Y-%m-%d")
+        + "_"
+        + "".join(random.choices(string.ascii_letters + string.digits, k=6))
+    )
 
-    dicts = create_upload_dicts(images)
+    dicts = create_upload_dicts(images, key)
     excels = create_excels(dicts, key)
     zips = create_zips(dicts, key)
 
-    return dicts, zips, excels
+    return key, dicts, zips, excels
+
+
+def get_not_uploaded_images(content_dir: Path = Path("content")) -> list[Path]:
+    images: list[Path] = []
+    for root, _, files in os.walk(content_dir):
+        # Check if we're in a not_uploaded directory
+        if "not uploaded" not in root:
+            continue
+
+        # Create uploaded directory if it doesn't exist
+        uploaded_dir = Path(root).with_name("uploaded")
+        uploaded_dir.mkdir(parents=True, exist_ok=True)
+
+        # Process each file in the not_uploaded directory
+        for file in files:
+            file_path = Path(root) / file
+
+            # Check if the file is an image
+            if not imagetools.is_image_file(file_path):
+                continue
+
+            images.append(file_path)
+
+    return images

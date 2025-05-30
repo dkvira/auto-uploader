@@ -2,9 +2,12 @@ import asyncio
 import json
 import logging
 import os
+import re
+import shutil
 from pathlib import Path
 
 import httpx
+import pandas as pd
 from bs4 import BeautifulSoup
 
 import basic
@@ -152,11 +155,11 @@ async def process_zip_import(
     filepath: Path, cookies: dict | httpx.Cookies | None = None
 ):
     upload_response_data = await upload_zip(filepath, cookies)
-    logging.info(f"Zip upload response: {upload_response_data}")
+    logging.debug(f"Zip upload response: {upload_response_data}")
     submit_response = await submit_uploaded_file(
         upload_response_data, filepath.stem, cookies
     )
-    logging.info(f"Zip submit response: {submit_response.status_code}")
+    logging.debug(f"Zip submit response: {submit_response.status_code}")
     await check_zip_upload_status(filepath.stem, cookies)
     return submit_response
 
@@ -418,10 +421,10 @@ async def check_excel_upload_table_status(
             continue
 
         if cells[5].text.strip() == "Imported":
-            return True
+            return cells[1].text.strip()
 
         if cells[5].text.strip() == "Invalid":
-            logging.info(f"Invalid excel file {name}")
+            logging.warning(f"Invalid excel file {name}")
             raise Exception("Invalid excel file upload")
 
         return False
@@ -446,7 +449,7 @@ async def check_excel_upload_status(
 
 async def process_excel_import(
     title: str, excel_filepath: Path, cookies: dict | httpx.Cookies | None = None
-):
+) -> str:
     """Handle the complete excel import process"""
     # Step 1: Export template and get exported file info
     exported_file_info, upload_id = await export_excel_template(title, cookies)
@@ -465,13 +468,13 @@ async def process_excel_import(
     if import_response.status_code >= 400:
         raise Exception(f"Failed to import excel: {import_response.status_code}")
 
-    logging.info(f"Excel import response: {import_response.status_code}")
+    logging.debug(f"Excel import response: {import_response.status_code}")
     # Step 4: Check import status
-    status = await check_excel_upload_status(title, cookies)
-    if not status:
+    excel_upload_id = await check_excel_upload_status(title, cookies)
+    if not excel_upload_id:
         raise Exception("Excel import failed or timed out")
 
-    return import_response
+    return excel_upload_id
 
 
 async def download_unzip(url: str, filepath: Path):
@@ -492,49 +495,139 @@ def check_connection():
     return response.status_code
 
 
-async def main(download_url: str | None = None):
+def save_report_excel(*, key: str, uploaded_images: list[str], excel_upload_id: str):
+    # check if report excel exists
+    # load data from report excel
+    # add new records to report excel
+    # data is (original_image_path, status, excel_upload_id, key)
+    # save report excel
+    status = "success" if excel_upload_id else "failed"
+    report_excel_path = config.log_dir / "report.xlsx"
+    new_df = pd.DataFrame(
+        {
+            "key": [key] * len(uploaded_images),
+            "original_image_path": uploaded_images,
+            "image_path": [
+                p.replace("not uploaded", "uploaded") for p in uploaded_images
+            ],
+            "status": [status] * len(uploaded_images),
+            "excel_upload_id": [excel_upload_id] * len(uploaded_images),
+        }
+    )
+    if not report_excel_path.exists():
+        new_df.to_excel(report_excel_path, index=False)
+    else:
+        df = pd.read_excel(report_excel_path)
+        df = pd.concat([df, new_df], ignore_index=True)
+        df.to_excel(report_excel_path, index=False)
+
+    return uploaded_images
+
+
+def post_process(*, key: str, index: int, excel_upload_id: str):
+    basedir = config.tmp_dir / key
+    dicts_path = basedir / f"dicts_{key}.json"
+    if not dicts_path.exists():
+        logging.warning(f"dicts_{key}.json not found")
+        return
+
+    with open(dicts_path, encoding="utf-8") as f:
+        dicts: list[dict[str, str]] = json.load(f)
+
+    uploaded_images: list[str] = list(dicts[index].values())
+    save_report_excel(
+        key=key, uploaded_images=uploaded_images, excel_upload_id=excel_upload_id
+    )
+
+    for image_path in uploaded_images:
+        # move from not uploaded to uploaded
+        src_path = Path(image_path)
+        if not src_path.exists():
+            continue
+
+        # Get the parent directory and create uploaded directory
+        parent_dir = str(src_path.parent)
+        uploaded_dir = Path(parent_dir.replace("not uploaded", "uploaded"))
+        uploaded_dir.mkdir(parents=True, exist_ok=True)
+
+        # Move the file to uploaded directory
+        dst_path = uploaded_dir / src_path.name
+        shutil.move(str(src_path), str(dst_path))
+
+
+async def upload_key_dir(key: str):
+    logging.info("=" * 40)
+    logging.info(f"Uploading key: {key}")
+    logging.info("-" * 40)
+
     client = AuthenticatedClient()
     response = client.login()
     cookies = response.cookies
-    logging.info("logged in")
-    basedir = Path("tmp")
-    if "download_url" in locals() and download_url:
-        await download_unzip(download_url, basedir / "download.zip")
-        # return
+    
+    basedir = config.tmp_dir / key
+    zips = sorted(list(basedir.glob("*.zip")))
+    excels = list(
+        map(
+            lambda x: (basedir / x.stem.replace("zip", "excel")).with_suffix(".xlsx"),
+            zips,
+        )
+    )
+    pairs = list(zip(zips, excels, strict=False))
 
-    zips = sorted(list(basedir.glob("zip_*.zip")))
-    filepath = zips[0]
-    logging.info(f"zips: {zips}")
+    for i, (zip_path, excel_path) in enumerate(pairs):
+        logging.info("-" * 40)
+        logging.info(f"Processing file {i + 1}/{len(pairs)}")
 
-    for i, zip_path in enumerate(zips):
-        excel_path = basedir / f"{zip_path.stem.replace('zip', 'excel')}.xlsx"
-        logging.info(f"processing file {i + 1}/{len(zips)} {zip_path} {excel_path}")
+        if not zip_path.exists() or not excel_path.exists():
+            # generate string that which one of zip_path or excel_path,
+            # if both are not found, say both are not found
+            not_found_str = (
+                f"zip_path: {zip_path} not found"
+                if not zip_path.exists()
+                else (
+                    f"excel_path: {excel_path} not found"
+                    if not excel_path.exists()
+                    else "both zip_path and excel_path are not found"
+                )
+            )
+            logging.warning(f"file {i + 1}/{len(pairs)} {not_found_str}")
+            continue
 
         # Upload and process zip file
-        if zip_path.exists():
-            zip_response = await process_zip_import(zip_path, cookies)
-            logging.info(
-                f"Zip upload response: {i + 1}/{len(zips)} {zip_response.status_code}"
-            )
+        zip_response = await process_zip_import(zip_path, cookies)
+        logging.info(
+            f"Zip upload {i + 1}/{len(zips)} "
+            + ("OK" if zip_response.status_code < 400 else "FAILED")
+        )
 
         # Process excel file
-        if excel_path.exists():
-            excel_response = await process_excel_import(
-                excel_path.stem, excel_path, cookies
-            )
-            logging.info(
-                f"Excel import response: {i + 1}/{len(zips)} {excel_response.status_code}"
-            )
+        excel_upload_id = await process_excel_import(
+            excel_path.stem, excel_path, cookies
+        )
+        logging.info(
+            f"Excel import {i + 1}/{len(zips)} "
+            + ("OK" if excel_upload_id else "FAILED")
+        )
 
-        excel_path.unlink()
-        zip_path.unlink()
+        index = int(zip_path.stem.split("_")[-1]) - 1
+        post_process(
+            key=key,
+            index=index,
+            excel_upload_id=excel_upload_id,
+        )
 
-    # delete all files in tmp folder
-    for file in basedir.iterdir():
-        file.unlink()
+    shutil.rmtree(basedir)
 
 
 if __name__ == "__main__":
     config.config_logger()
     # main(sys.argv[1])
-    print(check_connection())
+    logging.info(f"Connection status: {'OK' if check_connection() < 400 else 'FAILED'}")
+    key = next(
+        filter(
+            lambda x: x.is_dir()
+            and re.match(r"^\d{4}-\d{2}-\d{2}_[a-zA-Z0-9]+$", x.name),
+            config.tmp_dir.iterdir(),
+        )
+    ).name
+    asyncio.run(upload_key_dir(key))

@@ -1,7 +1,10 @@
 import base64
 import itertools
+import mimetypes
+import re
 from fractions import Fraction
 from io import BytesIO
+from pathlib import Path
 from typing import Literal
 
 import httpx
@@ -68,17 +71,41 @@ def xyz_to_lab(xyz):
         else:
             return (7.787 * t) + (16 / 116)
 
-    l = 116 * f(y) - 16
-    a = 500 * (f(x) - f(y))
-    b = 200 * (f(y) - f(z))
+    lightness = 116 * f(y) - 16
+    color_axis_a = 500 * (f(x) - f(y))
+    color_axis_b = 200 * (f(y) - f(z))
 
-    return (l, a, b)
+    return (lightness, color_axis_a, color_axis_b)
 
 
 def rgb_to_lab(rgb):
     xyz = rgb_to_xyz(rgb)
     lab = xyz_to_lab(xyz)
     return lab
+
+
+def is_image_file(file_path: Path) -> bool:
+    """Check if the file is an image by checking its MIME type."""
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    if mime_type not in ["image/jpeg", "image/png"]:
+        return False
+
+    if file_path.stat().st_size > 10 * 1024 * 1024:
+        return False
+
+    if file_path.stat().st_size < 1024:
+        return False
+
+    # check if filename is valid dkp_id-index.ext | dkp_id.ext
+    if not re.match(r"^\d+(-\d+)?$", file_path.stem):
+        return False
+
+    try:
+        Image.open(file_path)
+    except Exception:
+        return False
+
+    return True
 
 
 def add_watermark_to_image(
@@ -200,13 +227,14 @@ def convert_image(
     Converts an image to the specified format while handling transparency correctly.
 
     - If the format supports transparency (PNG, WEBP), it preserves the alpha channel.
-    - If the format does NOT support transparency (JPEG, BMP, GIF), it removes transparency
-      by compositing the image on a background color.
+    - If the format does NOT support transparency (JPEG, BMP, GIF),
+      it removes transparency by compositing the image on a background color.
 
     Parameters:
     - image: PIL.Image.Image - The input image.
     - format: str - Target format (JPEG, PNG, WEBP, BMP, GIF).
-    - bg_color: tuple (R, G, B) - Background color for formats that do not support transparency.
+    - bg_color: tuple (R, G, B) - Background color for formats
+                that do not support transparency.
 
     Returns:
     - Converted Image.Image
@@ -303,10 +331,13 @@ async def get_image_metadata(
         url (str): URL of the image.
         use_range (bool): Whether to try a range request to download only a header part.
         max_bytes (int): Maximum number of bytes to request in a range request.
-        fallback (bool): If range request does not provide enough data, download the full file.
+        fallback (bool): If range request does not provide enough data,
+                         download the full file.
 
     Returns:
-        dict: Dictionary with image metadata (e.g., width, height, file_type, and content_type).
+        dict: Dictionary with image metadata 
+              (e.g., width, height, file_type, and content_type)
+              and exif data if available.
 
     Raises:
         ValueError: If the image metadata could not be determined.
@@ -415,7 +446,15 @@ def compress_image(
 async def download_image(
     url: str, max_width: int | None = None, max_size_kb: int | None = None, **kwargs
 ) -> Image.Image:
-    """Fetch, resize, remove metadata, and compress an image to fit the specified constraints."""
+    """
+    Fetch, resize, remove metadata, and compress
+    an image to fit the specified constraints.
+    
+    :param url: URL of the image.
+    :param max_width: Maximum width of the image.
+    :param max_size_kb: Maximum size of the image in kilobytes.
+    :param kwargs: Additional keyword arguments to pass to the load_from_url function.
+    """
     # Load image from either base64 or URL
     image = (
         load_from_base64(url)

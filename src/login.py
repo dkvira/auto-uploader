@@ -58,11 +58,11 @@ class AuthenticatedClient(httpx.Client):
                 )
                 if url_match:
                     redirect_url = url_match.group(0)
-                    logging.info("Extracted Login URL")
+                    logging.info("Login successful")
                 break
 
         if not redirect_url:
-            raise Exception("Failed to extract redirect URL")
+            raise Exception("Failed to login")
 
         response = self.get(redirect_url, timeout=30)
         self.cookies = response.cookies

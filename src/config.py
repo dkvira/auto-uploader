@@ -12,7 +12,7 @@ base_dir = Path(__file__).parent.parent
 with open(base_dir / "config.toml", "rb") as f:
     content_config: dict[str, str] = tomllib.load(f).get("content", {})
 
-content_dir = content_config.get("content_dir", base_dir / "content")
+content_dir = Path(content_config.get("content_dir")) or base_dir / "content"
 tmp_dir = base_dir / "tmp"
 log_dir = base_dir / "logs"
 

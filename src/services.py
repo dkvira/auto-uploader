@@ -9,8 +9,7 @@ from pathlib import Path
 from persiantools.jdatetime import JalaliDate
 from PIL import Image
 
-import config
-import imagetools
+from . import config, imagetools
 
 
 def is_valid(image: Path | str | Image.Image | None) -> bool:

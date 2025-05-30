@@ -10,9 +10,8 @@ import httpx
 import pandas as pd
 from bs4 import BeautifulSoup
 
-import basic
-import config
-from login import AuthenticatedClient
+from . import basic, config
+from .login import AuthenticatedClient
 
 
 async def upload_zip(filepath: Path, cookies: dict | httpx.Cookies | None = None):

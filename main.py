@@ -11,4 +11,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    config.config_logger()
     asyncio.run(main())

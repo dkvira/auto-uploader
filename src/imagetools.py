@@ -97,7 +97,7 @@ def is_image_file(file_path: Path) -> bool:
         return False
 
     # check if filename is valid dkp_id-index.ext | dkp_id.ext
-    if not re.match(r"^\d+(-\d+)?$", file_path.stem):
+    if not re.match(r"^\d+(-([mM]|\d+))?$", file_path.stem):
         return False
 
     try:
@@ -169,9 +169,12 @@ def split_image(image: Image.Image, sections=(2, 2), **kwargs) -> list[Image.Ima
     for i, j in itertools.product(range(sections[0]), range(sections[1])):
         x = j * image.width // sections[0]
         y = i * image.height // sections[1]
-        region = image.crop(
-            (x, y, x + image.width // sections[0], y + image.height // sections[1])
-        )
+        region = image.crop((
+            x,
+            y,
+            x + image.width // sections[0],
+            y + image.height // sections[1],
+        ))
         parts.append(region)
     return parts
 
@@ -335,7 +338,7 @@ async def get_image_metadata(
                          download the full file.
 
     Returns:
-        dict: Dictionary with image metadata 
+        dict: Dictionary with image metadata
               (e.g., width, height, file_type, and content_type)
               and exif data if available.
 
@@ -449,7 +452,7 @@ async def download_image(
     """
     Fetch, resize, remove metadata, and compress
     an image to fit the specified constraints.
-    
+
     :param url: URL of the image.
     :param max_width: Maximum width of the image.
     :param max_size_kb: Maximum size of the image in kilobytes.

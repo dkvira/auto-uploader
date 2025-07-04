@@ -31,7 +31,7 @@ def is_valid(image: Path | str | Image.Image | None) -> bool:
     return True
 
 
-def create_upload_dicts(images: list[Path], key: str = "") -> list[dict]:
+def create_upload_dicts(images: list[Path], key: str = "") -> list[dict[str, str]]:
     accepted_images: list[dict[str, str]] = []
     for image_path in images:
         if not is_valid(image_path):
@@ -57,7 +57,7 @@ def create_upload_dicts(images: list[Path], key: str = "") -> list[dict]:
     return accepted_images
 
 
-def create_zips(dicts: list[dict], key: str = ""):
+def create_zips(dicts: list[dict[str, str]], key: str = ""):
     import zipfile
     zips = []
     basedir = config.tmp_dir / key
@@ -96,7 +96,7 @@ def create_zips(dicts: list[dict], key: str = ""):
     return zips
 
 
-def write_excel_openpyxl(excel: list[dict], file_path: str):
+def write_excel_openpyxl(excel: list[dict[str, str]], file_path: str):
     from openpyxl import Workbook
 
     wb = Workbook()
@@ -125,7 +125,7 @@ def write_excel_openpyxl(excel: list[dict], file_path: str):
     wb.save(file_path)
 
 
-def write_excel_xlsxwriter(excel: list[dict], file_path: str):
+def write_excel_xlsxwriter(excel: list[dict[str, str]], file_path: str):
     import xlsxwriter
 
     workbook = xlsxwriter.Workbook(file_path)
@@ -148,7 +148,7 @@ def write_excel_xlsxwriter(excel: list[dict], file_path: str):
     workbook.close()
 
 
-def write_excel_pandas(excel: list[dict], file_path: str):
+def write_excel_pandas(excel: list[dict[str, str]], file_path: str):
     import pandas as pd
 
     df = pd.DataFrame(excel)
@@ -156,15 +156,17 @@ def write_excel_pandas(excel: list[dict], file_path: str):
     # df.to_csv(f"tmp/excel_{today}_{i+1}.csv", index=False)
 
 
-def create_excels(dicts: list[dict], key: str = ""):
+def create_excels(dicts: list[dict[str, str]], key: str = ""):
     excels = []
     for i, d in enumerate(dicts):
         excel = []
         for j, k in enumerate(d.keys()):
+            parts = Path(d[k]).stem.split("-")
+            is_main = len(parts) > 1 and parts[1].lower() == "m"
             excel.append(
                 {
                     "Product ID": k,
-                    "Is main": "no",
+                    "Is main": "yes" if is_main else "no",
                     "Type": "gallery",
                     "watermark": "no",
                     "copyright": "no",
